@@ -28,7 +28,7 @@ fun App() {
           horizontalAlignment = Alignment.CenterHorizontally
       ) {
           Text(
-              text = "Home Screen",
+              text = "Updated home screen",
               fontSize = MaterialTheme.typography.bodyLarge.fontSize
           )
       }
