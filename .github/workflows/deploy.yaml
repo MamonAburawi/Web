@@ -1,0 +1,70 @@
+# Set a name for your workflow.
+name: Build & Deploy Web Project
+
+# This workflow runs on a push event.
+on:
+  push:
+    # Make sure to set your branch name here.
+    branches: [ main ]
+
+# These permissions are required for GitHub Pages deployment. No changes are usually needed.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Contains all jobs for this workflow.
+jobs:
+  # This is the build job. You can rename it if you like.
+  build:
+    # Specifies the runner. 'ubuntu-latest' is a good default.
+    runs-on: ubuntu-latest
+    steps:
+      # Checks out your repository's code so the job can access it.
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      # Set up the JDK version your project requires.
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      # Makes the Gradle wrapper executable. This step is usually required.
+      - name: Grant execute permission for gradlew
+        run: chmod +x ./gradlew
+
+      # Sets up Gradle caching to speed up future builds. No changes needed.
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      # Your project's build command goes here.
+      - name: Build KMP Web artifact
+        run: ./gradlew wasmJsBrowserDistribution
+
+      # Configures GitHub Pages settings. No changes needed.
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
+      # Uploads the build output for the deploy job to use.
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          # IMPORTANT: Update this path to your project's build output directory.
+          path: composeApp/build/dist/wasmJs/productionExecutable
+
+  # This is the deployment job.
+  deploy:
+    # Ensure this matches the ID of your build job (e.g., 'needs: build').
+    needs: build
+    runs-on: ubuntu-latest
+    # Configures the deployment target. No changes are usually needed.
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      # This action handles the final deployment. No changes needed.
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
